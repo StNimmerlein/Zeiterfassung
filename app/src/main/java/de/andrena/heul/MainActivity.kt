@@ -13,11 +13,20 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
+import android.widget.Toast
+import khttp.get
+import registeredTag
+import android.os.StrictMode
+import khttp.post
+
 
 class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
+        StrictMode.setThreadPolicy(policy)
+
         setContentView(R.layout.activity_main)
 
         var nfcAdapter = NfcAdapter.getDefaultAdapter(this)
@@ -29,26 +38,16 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
 
         NfcAdapter.getDefaultAdapter(this)?.let { nfcAdapter ->
-            // An Intent to start your current Activity. Flag to singleTop
-            // to imply that it should only be delivered to the current
-            // instance rather than starting a new instance of the Activity.
             val launchIntent = Intent(this, this.javaClass)
             launchIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
 
-            // Supply this launch intent as the PendingIntent, set to cancel
-            // one if it's already in progress. It never should be.
             val pendingIntent = PendingIntent.getActivity(
                 this, 0, launchIntent, PendingIntent.FLAG_CANCEL_CURRENT
             )
 
-            // Define your filters and desired technology types
             val filters = arrayOf(IntentFilter(ACTION_TAG_DISCOVERED))
             val techTypes = arrayOf(arrayOf(IsoDep::class.java.name))
 
-            // And enable your Activity to receive NFC events. Note that there
-            // is no need to manually disable dispatch in onPause() as the system
-            // very strictly performs this for you. You only need to disable
-            // dispatch if you don't want to receive tags while resumed.
             nfcAdapter.enableForegroundDispatch(
                 this, pendingIntent, filters, techTypes
             )
@@ -58,19 +57,36 @@ class MainActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
 
-        printMessage(intent.action ?: "Undefined")
         if (ACTION_TAG_DISCOVERED == intent.action) {
 
             val rawMessages = intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)
-            var ndefMsg = rawMessages[0] as NdefMessage
+            val ndefMsg = rawMessages[0] as NdefMessage
 
-            var text = ndefMsg.records.map { record -> record.toUri() ?: String(record.payload) }.joinToString("\n")
-            printMessage(text)
+            val text = ndefMsg.records.map { record -> record.toUri() ?: String(record.payload) }.joinToString("\n")
+            if (text == registeredTag) {
+                checkInOrOut()
+            } else {
+                Toast.makeText(this, "Falsche Tag", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
-    fun sendNotification(view: View) {
-        printMessage("Geklickt")
+    private fun checkInOrOut() {
+        var currentState = get("http://10.89.1.228:8080/stempel")
+
+        if (currentState.text == "eingestempelt") {
+            Toast.makeText(this, "Stemple aus", Toast.LENGTH_LONG).show()
+//            post("https://jsonplaceholder.typicode.com/todos/122", data = "{\"name\":\"Nase\"}")
+        } else {
+            Toast.makeText(this, "Stemple ein", Toast.LENGTH_LONG).show()
+//            post("https://jsonplaceholder.typicode.com/todos/122", data = "{\"name\":\"Nase\"}")
+        }
+//        Toast.makeText(this, currentState.text, Toast.LENGTH_LONG).show()
+    }
+
+    fun openRegisterTagActivity(view: View) {
+        val intent = Intent(this, Registerer::class.java)
+        startActivity(intent)
     }
 
     fun printMessage(text: String) {

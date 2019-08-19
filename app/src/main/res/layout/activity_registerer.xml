@@ -5,20 +5,19 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".Registerer">
 
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hello World!"
+            android:text="Bitte Tag scannen..."
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:id="@+id/label"/>
+            app:layout_constraintTop_toTopOf="parent"/>
     <Button android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:text="Register new Tag"
-            android:onClick="openRegisterTagActivity"
+            android:text="Abbrechen"
+            android:onClick="cancel"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/label"
             app:layout_constraintLeft_toLeftOf="parent"/>
